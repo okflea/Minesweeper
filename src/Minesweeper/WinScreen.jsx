@@ -7,7 +7,7 @@ export default () => {
   return (
     <Confetti
       width={width}
-      height={height}
+      height={height*1.5}
     />
   )
 }
