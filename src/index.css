@@ -69,18 +69,21 @@ width:100%;height:100%;position:absolute;left:0px;top:0px;overflow:hidden;
   background-color:#546fef,
 }
 
-h1 {
+.heading {
+  font-family: 'Ubuntu';
   text-align: center;
   font-size: 72px;
-  background: -webkit-linear-gradient(#eee, #333);
+	background-image: linear-gradient(to right, #415a77, #778da9);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 
 h2 {
+
+  font-family: 'Ubuntu';
   font-size: 22px;
-  background: -webkit-linear-gradient(#eee, #333);
+  background: -webkit-linear-gradient( #ffb4a2, #6d6875);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
