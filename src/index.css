@@ -1,0 +1,13 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-slate-100 text-black dark:bg-slate-800 dark:text-white;
+  }
+}
+
+.glass {
+  @apply bg-emerald-600 bg-opacity-20 bg-clip-padding backdrop-blur-md backdrop-filter;
+}
