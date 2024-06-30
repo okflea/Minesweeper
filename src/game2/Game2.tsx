@@ -24,7 +24,7 @@ const generateSquares = (): Square[][] => {
         col: j,
         isRevealed: false,
         isBomb: false,
-        isEmpty: false,
+        isEmpty: true,
         isFlagged: false,
         neighborBombs: 0,
       };
@@ -43,7 +43,25 @@ const generateBombs = (squares: Square[][], firstClick: Square) => {
       (randRow !== firstClick.row || randCol !== firstClick.col)
     ) {
       squares[randRow][randCol].isBomb = true;
+      squares[randRow][randCol].isEmpty = false;
       bombsPlaced++;
+
+      // Update neighboring bomb counts
+      for (let i = -1; i <= 1; i++) {
+        for (let j = -1; j <= 1; j++) {
+          const newRow = randRow + i;
+          const newCol = randCol + j;
+          if (
+            newRow >= 0 &&
+            newRow < numRows &&
+            newCol >= 0 &&
+            newCol < numCols &&
+            !(i === 0 && j === 0)
+          ) {
+            squares[newRow][newCol].neighborBombs++;
+          }
+        }
+      }
     }
   }
 };
@@ -54,6 +72,7 @@ const Game: React.FC = () => {
   >("ready");
   const [squares, setSquares] = useState<Square[][]>([]);
   const [timer, setTimer] = useState<number>(0);
+  const [flagsRemaining, setFlagsRemaining] = useState<number>(numBombs);
 
   useEffect(() => {
     setSquares(generateSquares());
@@ -64,7 +83,6 @@ const Game: React.FC = () => {
       const interval = setInterval(() => {
         setTimer((prevTimer) => prevTimer + 1);
       }, 1000);
-
       return () => clearInterval(interval);
     }
   }, [gameState]);
@@ -77,16 +95,46 @@ const Game: React.FC = () => {
 
     const newSquares = [...squares];
     const square = newSquares[row][col];
+
     if (square.isFlagged || square.isRevealed) return;
 
     if (square.isBomb) {
+      square.isRevealed = true; // Reveal the clicked bomb
       setGameState("lost");
+      console.log("Bomb clicked. Game Over.");
+      revealAllBombs(newSquares); // Reveal all bombs
     } else {
-      square.isRevealed = true;
-      newSquares[row][col] = square;
+      // Use BFS to reveal empty squares
+      const stack: { row: number; col: number }[] = [{ row, col }];
 
-      if (square.neighborBombs === 0) {
-        revealEmptySquares(newSquares, row, col);
+      while (stack.length > 0) {
+        const { row, col } = stack.pop()!;
+        const currentSquare = newSquares[row][col];
+
+        if (currentSquare.isRevealed || currentSquare.isFlagged) continue;
+
+        currentSquare.isRevealed = true;
+        newSquares[row][col] = { ...currentSquare };
+
+        if (currentSquare.neighborBombs === 0) {
+          // Check all neighbors
+          for (let i = -1; i <= 1; i++) {
+            for (let j = -1; j <= 1; j++) {
+              const newRow = row + i;
+              const newCol = col + j;
+
+              if (
+                newRow >= 0 &&
+                newRow < numRows &&
+                newCol >= 0 &&
+                newCol < numCols &&
+                !(i === 0 && j === 0)
+              ) {
+                stack.push({ row: newRow, col: newCol });
+              }
+            }
+          }
+        }
       }
 
       setSquares(newSquares);
@@ -94,25 +142,15 @@ const Game: React.FC = () => {
     }
   };
 
-  const revealEmptySquares = (
-    squares: Square[][],
-    row: number,
-    col: number
-  ) => {
-    for (let i = row - 1; i <= row + 1; i++) {
-      for (let j = col - 1; j <= col + 1; j++) {
-        if (i >= 0 && i < numRows && j >= 0 && j < numCols) {
-          const neighSquare = squares[i][j];
-          if (!neighSquare.isRevealed) {
-            neighSquare.isRevealed = true;
-            squares[i][j] = { ...neighSquare };
-            if (neighSquare.neighborBombs === 0) {
-              revealEmptySquares(squares, i, j);
-            }
-          }
+  const revealAllBombs = (squares: Square[][]) => {
+    squares.forEach((row) => {
+      row.forEach((square) => {
+        if (square.isBomb) {
+          square.isRevealed = true;
         }
-      }
-    }
+      });
+    });
+    setSquares([...squares]);
   };
 
   const handleRightClick = (e: React.MouseEvent, row: number, col: number) => {
@@ -123,10 +161,15 @@ const Game: React.FC = () => {
     const square = newSquares[row][col];
     if (square.isRevealed) return;
 
+    if (square.isFlagged) {
+      setFlagsRemaining(flagsRemaining + 1);
+    } else {
+      setFlagsRemaining(flagsRemaining - 1);
+    }
+
     square.isFlagged = !square.isFlagged;
     newSquares[row][col] = square;
     setSquares(newSquares);
-
     checkGameWon(newSquares);
   };
 
@@ -147,64 +190,61 @@ const Game: React.FC = () => {
       squaresFlagged === totalBombs
     ) {
       setGameState("won");
+      console.log("Game Won!");
     }
-  };
-
-  const renderSquare = (row: number, col: number) => {
-    const square = squares[row][col];
-    let className = "square ";
-    if (square.isRevealed) {
-      className += "revealed ";
-      if (square.isBomb) {
-        className += "bomb ";
-      }
-    } else {
-      className += "unrevealed ";
-    }
-
-    return (
-      <div
-        key={`${row}-${col}`}
-        className={className}
-        onClick={() => handleSquareClick(row, col)}
-        onContextMenu={(e) => handleRightClick(e, row, col)}
-      >
-        {square.isRevealed
-          ? square.isBomb
-            ? "💣"
-            : square.neighborBombs > 0
-            ? square.neighborBombs
-            : ""
-          : square.isFlagged
-          ? "🚩"
-          : ""}
-      </div>
-    );
   };
 
   const resetGame = () => {
     setGameState("ready");
     setSquares(generateSquares());
     setTimer(0);
+    setFlagsRemaining(numBombs);
   };
 
   return (
-    <div>
-      <div className="header">
-        <div className="timer">{timer}</div>
-        <div className="game-status">
+    <div className="p-4">
+      <div className="header mb-4 flex items-center justify-between">
+        <div className="timer text-xl">{timer}</div>
+        <div className="game-status text-xl">
           {gameState === "playing"
             ? "Playing"
             : gameState === "won"
             ? "You Won!"
-            : "You Lost!"}
+            : gameState === "lost"
+            ? "You Lost!"
+            : "Ready"}
         </div>
-        <button onClick={resetGame}>Restart Game</button>
+        <button
+          className="rounded-lg bg-slate-700 p-2 text-white hover:animate-pulse"
+          onClick={resetGame}
+        >
+          Restart Game
+        </button>
+        <div className="flags-remaining text-xl">
+          Flags Remaining: {flagsRemaining}
+        </div>
       </div>
-      <div className="board">
-        {squares.map((row, rowIndex) => (
-          <div key={rowIndex} className="row">
-            {row.map((square, colIndex) => renderSquare(rowIndex, colIndex))}
+      <div className="board grid grid-cols-10">
+        {squares.flat().map((square) => (
+          <div
+            key={`${square.row}-${square.col}`}
+            className={`flex h-10 w-10 items-center justify-center border-4 ${
+              square.isRevealed
+                ? "cursor-default bg-slate-300"
+                : "cursor-pointer bg-slate-100 hover:bg-gray-300"
+            } border-gray-400 bg-gray-200 text-slate-800`}
+            onClick={() => handleSquareClick(square.row, square.col)}
+            onContextMenu={(e) => handleRightClick(e, square.row, square.col)}
+          >
+            {square.isRevealed
+              ? square.isBomb
+                ? "💣"
+                : square.neighborBombs > 0
+                ? square.neighborBombs
+                : ""
+              : square.isFlagged
+              ? "🚩"
+              : ""}
           </div>
         ))}
       </div>

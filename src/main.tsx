@@ -1,15 +1,20 @@
 import React from "react";
-import ReactDOM from "react-dom";
 import "./index.css";
 import App from "./App";
 import Topbar from "./component/Topbar";
+import { RecoilRoot } from "recoil";
+import { createRoot } from "react-dom/client";
 
-ReactDOM.render(
+/* Pick a theme of your choice */
+
+const root = createRoot(document.getElementById("root") as HTMLElement);
+root.render(
   <React.StrictMode>
-    <body className=" p-4">
-      <Topbar />
-      <App />
-    </body>
-  </React.StrictMode>,
-  document.getElementById("root")
+    <RecoilRoot>
+      <div className="p-6">
+        <Topbar />
+        <App />
+      </div>
+    </RecoilRoot>
+  </React.StrictMode>
 );
