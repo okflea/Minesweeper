@@ -18,62 +18,6 @@ type Square = {
   neighborBombs: number;
 };
 
-// const numRows = 10;
-// const numCols = 10;
-// const numBombs = 20;
-
-// const generateSquares = (): Square[][] => {
-//   const squares: Square[][] = [];
-//   for (let i = 0; i < numRows; i++) {
-//     squares[i] = [];
-//     for (let j = 0; j < numCols; j++) {
-//       squares[i][j] = {
-//         row: i,
-//         col: j,
-//         isRevealed: false,
-//         isBomb: false,
-//         isEmpty: true,
-//         isFlagged: false,
-//         neighborBombs: 0,
-//       };
-//     }
-//   }
-//   return squares;
-// };
-
-// const generateBombs = (squares: Square[][], firstClick: Square) => {
-//   let bombsPlaced = 0;
-//   while (bombsPlaced < numBombs) {
-//     const randRow = Math.floor(Math.random() * numRows);
-//     const randCol = Math.floor(Math.random() * numCols);
-//     if (
-//       !squares[randRow][randCol].isBomb &&
-//       (randRow !== firstClick.row || randCol !== firstClick.col)
-//     ) {
-//       squares[randRow][randCol].isBomb = true;
-//       squares[randRow][randCol].isEmpty = false;
-//       bombsPlaced++;
-//
-//       // Update neighboring bomb counts
-//       for (let i = -1; i <= 1; i++) {
-//         for (let j = -1; j <= 1; j++) {
-//           const newRow = randRow + i;
-//           const newCol = randCol + j;
-//           if (
-//             newRow >= 0 &&
-//             newRow < numRows &&
-//             newCol >= 0 &&
-//             newCol < numCols &&
-//             !(i === 0 && j === 0)
-//           ) {
-//             squares[newRow][newCol].neighborBombs++;
-//           }
-//         }
-//       }
-//     }
-//   }
-// };
-
 const Game: React.FC = () => {
   const generateSquares = (rows: number, cols: number): Square[][] => {
     const squares: Square[][] = [];
@@ -156,13 +100,7 @@ const Game: React.FC = () => {
   const [gameState, setGameState] = useState<
     "ready" | "playing" | "won" | "lost"
   >("ready");
-  // const [squares, setSquares] = useState<Square[][]>([]);
   const [timer, setTimer] = useState<number>(0);
-  // const [flagsRemaining, setFlagsRemaining] = useState<number>(numBombs);
-
-  // useEffect(() => {
-  //   setSquares(generateSquares());
-  // }, []);
 
   useEffect(() => {
     if (gameState === "playing") {
@@ -295,14 +233,14 @@ const Game: React.FC = () => {
   };
   const getNumberColor = (number: any) => {
     const colors = [
-      "text-blue-500",
-      "text-green-500",
-      "text-red-500",
-      "text-purple-500",
-      "text-yellow-500",
-      "text-pink-500",
-      "text-indigo-500",
-      "text-gray-500",
+      "text-blue-400",
+      "text-green-400",
+      "text-red-400",
+      "text-purple-400",
+      "text-yellow-400",
+      "text-pink-400",
+      "text-indigo-400",
+      "text-gray-400",
     ];
     return colors[number - 1] || colors[colors.length - 1];
   };
